@@ -110,6 +110,12 @@ CREATE UNIQUE INDEX `dni_UNIQUE` ON `Usuarios` (`dni` ASC) VISIBLE;
 
 CREATE UNIQUE INDEX `username_UNIQUE` ON `Usuarios` (`username` ASC) VISIBLE;
 
+/*Índice compuesto entre las columnas apellidos y nombres,
+  ya que el sistema puede requerir buscar usuarios por apellido
+  o por apellido y nombre en conjunto
+*/
+
+CREATE INDEX `idx_Usuarios_apellidos_nombres`  ON `Usuarios` (`apellidos` ASC, `nombres` ASC) VISIBLE;
 
 -- -----------------------------------------------------
 -- Table `Clientes`
@@ -235,6 +241,11 @@ CREATE INDEX `fk_LineasComandas_Comandas1_idx` ON `LineasComandas` (`idComanda` 
 
 CREATE INDEX `fk_LineasComandas_Productos1_idx` ON `LineasComandas` (`idProducto` ASC) VISIBLE;
 
+/*
+  Índice compuesto entre las columnas idComanda y estado,
+  ya que es frecuente consultar los ítems de una comanda filtrados por su estado
+  */
+CREATE INDEX `idx_LineasComandas_idComanda_estado` ON `LineasComandas` (`idComanda` ASC, `estado` ASC) VISIBLE;
 
 -- -----------------------------------------------------
 -- Table `CuponesClientes`
