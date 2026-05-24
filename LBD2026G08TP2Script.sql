@@ -15,6 +15,7 @@
 -- GitHub Usuario:  russoagustin - Jorgefhh
 -- =====================================================
 
+-- MySQL Workbench Forward Engineering
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -23,17 +24,19 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema RomaLBD
 -- -----------------------------------------------------
-DROP SCHEMA IF EXISTS `RomaLBD` ;
+DROP SCHEMA IF EXISTS `LBD2026G08` ;
 
 -- -----------------------------------------------------
 -- Schema RomaLBD
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `RomaLBD` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
-USE `RomaLBD` ;
+CREATE SCHEMA IF NOT EXISTS `LBD2026G08` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
+USE `LBD2026G08` ;
 
 -- -----------------------------------------------------
 -- Table `Categorias`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Categorias` ;
+
 CREATE TABLE IF NOT EXISTS `Categorias` (
   `idCategoria` INT NOT NULL AUTO_INCREMENT,
   `categoria` VARCHAR(50) NOT NULL,
@@ -46,6 +49,8 @@ CREATE UNIQUE INDEX `categoria_UNIQUE` ON `Categorias` (`categoria` ASC) VISIBLE
 -- -----------------------------------------------------
 -- Table `Subcategorias`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Subcategorias` ;
+
 CREATE TABLE IF NOT EXISTS `Subcategorias` (
   `idSubcategoria` INT NOT NULL AUTO_INCREMENT,
   `idCategoria` INT NOT NULL,
@@ -55,52 +60,60 @@ CREATE TABLE IF NOT EXISTS `Subcategorias` (
     FOREIGN KEY (`idCategoria`)
     REFERENCES `Categorias` (`idCategoria`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
 CREATE INDEX `fk_Subcategorias_Categorias_idx` ON `Subcategorias` (`idCategoria` ASC) VISIBLE;
-/*Indice único comuesto entre las columnas subcategoria (nombre de la subcategoria) e idCategoria
-  ya que una Categoria no puede tener dos subcategorias con el mismo nombre.
+
+/*
+	Índice único compuesto entre las columnas subcategoria (nombre de la subcategoria) e idCategoria
+    ya que una Categoría no puede tener dos subcategorias con el mismo nombre
 */
-CREATE UNIQUE INDEX `uq_Subcategorias_subcategoria_idCategoria` ON `Subcategorias`(`idCategoria`,`subcategoria` ASC) VISIBLE;
+CREATE UNIQUE INDEX `fk_Subcategorias_subcategoria_idCategoria` ON `Subcategorias`(`idCategoria` ASC,`subcategoria` ASC) VISIBLE;
+
 
 -- -----------------------------------------------------
 -- Table `Productos`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Productos` ;
+
 CREATE TABLE IF NOT EXISTS `Productos` (
   `idProducto` INT NOT NULL AUTO_INCREMENT,
   `producto` VARCHAR(50) NOT NULL,
   `precioLista` DECIMAL(9,2) NOT NULL,
   `puntos` SMALLINT NOT NULL DEFAULT 0,
   `descripcion` VARCHAR(255) NULL,
-  `disponible` TINYINT(1) NOT NULL,
+  `disponible` TINYINT(1) NOT NULL DEFAULT TRUE,
   `idSubcategoria` INT NOT NULL,
-  `idCategoria` INT NOT NULL,
+  `dCategoria` INT NOT NULL,
   PRIMARY KEY (`idProducto`),
   CONSTRAINT `fk_Productos_Subcategorias1`
-    FOREIGN KEY (`idSubcategoria` , `idCategoria`)
+    FOREIGN KEY (`idSubcategoria` , `dCategoria`)
     REFERENCES `Subcategorias` (`idSubcategoria` , `idCategoria`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
-CREATE INDEX `fk_Productos_Subcategorias1_idx` ON `Productos` (`idSubcategoria` ASC, `idCategoria` ASC) VISIBLE;
+CREATE INDEX `fk_Productos_Subcategorias1_idx` ON `Productos` (`idSubcategoria` ASC, `dCategoria` ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
 -- Table `Usuarios`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Usuarios` ;
+
 CREATE TABLE IF NOT EXISTS `Usuarios` (
   `idUsuario` INT NOT NULL AUTO_INCREMENT,
   `nombres` VARCHAR(45) NOT NULL,
   `apellidos` VARCHAR(45) NOT NULL,
-  `email` VARCHAR(254) NOT NULL CHECK(email REGEXP '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'),
+  `email` VARCHAR(254) NOT NULL CHECK(email REGEXP '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'),
   `username` VARCHAR(45) NOT NULL,
-  `contrasenia` VARCHAR(45) NOT NULL,
-  `esAdmin` TINYINT(1) NOT NULL,
+  `contrasenia` CHAR(60) NOT NULL,
+  `esMozo` TINYINT(1) NOT NULL DEFAULT FALSE,
+  `esAdmin` TINYINT(1) NOT NULL DEFAULT FALSE,
   `fechaNac` DATE NOT NULL,
   `dni` CHAR(8) NOT NULL CHECK(dni REGEXP '^[0-9]{7,8}$'),
-  `activo` TINYINT(1) NOT NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT FALSE,
   PRIMARY KEY (`idUsuario`))
 ENGINE = InnoDB;
 
@@ -114,53 +127,42 @@ CREATE UNIQUE INDEX `username_UNIQUE` ON `Usuarios` (`username` ASC) VISIBLE;
   ya que el sistema puede requerir buscar usuarios por apellido
   o por apellido y nombre en conjunto
 */
-
 CREATE INDEX `idx_Usuarios_apellidos_nombres`  ON `Usuarios` (`apellidos` ASC, `nombres` ASC) VISIBLE;
 
 -- -----------------------------------------------------
 -- Table `Clientes`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Clientes` ;
+
 CREATE TABLE IF NOT EXISTS `Clientes` (
+  `idCliente` INT NOT NULL,
   `puntos` SMALLINT NOT NULL DEFAULT 0,
-  `idUsuario` INT NOT NULL,
-  PRIMARY KEY (`idUsuario`),
+  PRIMARY KEY (`idCliente`),
   CONSTRAINT `fk_Clientes_Usuarios1`
-    FOREIGN KEY (`idUsuario`)
+    FOREIGN KEY (`idCliente`)
     REFERENCES `Usuarios` (`idUsuario`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `Mozos`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Mozos` (
-  `idUsuario` INT NOT NULL,
-  PRIMARY KEY (`idUsuario`),
-  CONSTRAINT `fk_Mozos_Usuarios1`
-    FOREIGN KEY (`idUsuario`)
-    REFERENCES `Usuarios` (`idUsuario`)
-    ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
 -- Table `Cupones`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Cupones` ;
+
 CREATE TABLE IF NOT EXISTS `Cupones` (
   `idCupon` INT NOT NULL AUTO_INCREMENT,
+  `idProducto` INT NOT NULL,
   `descuento` DECIMAL(3,2) NOT NULL,
   `precioPuntos` SMALLINT NOT NULL,
   `fechaExpiracion` DATE NOT NULL,
-  `idProducto` INT NOT NULL,
   PRIMARY KEY (`idCupon`),
   CONSTRAINT `fk_Cupones_Productos1`
     FOREIGN KEY (`idProducto`)
     REFERENCES `Productos` (`idProducto`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
 CREATE INDEX `fk_Cupones_Productos1_idx` ON `Cupones` (`idProducto` ASC) VISIBLE;
@@ -169,17 +171,24 @@ CREATE INDEX `fk_Cupones_Productos1_idx` ON `Cupones` (`idProducto` ASC) VISIBLE
 -- -----------------------------------------------------
 -- Table `Mesas`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Mesas` ;
+
 CREATE TABLE IF NOT EXISTS `Mesas` (
+  `idMesa` INT NOT NULL AUTO_INCREMENT,
   `numeroMesa` INT NOT NULL,
   `ubicacion` ENUM('ADENTRO', 'AFUERA') NOT NULL,
-  `activo` TINYINT(1) NOT NULL,
-  PRIMARY KEY (`numeroMesa`))
+  `activo` TINYINT(1) NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (`idMesa`))
 ENGINE = InnoDB;
+
+CREATE UNIQUE INDEX `numeroMesa_UNIQUE` ON `Mesas` (`numeroMesa` ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
 -- Table `Comandas`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `Comandas` ;
+
 CREATE TABLE IF NOT EXISTS `Comandas` (
   `idComanda` INT NOT NULL AUTO_INCREMENT,
   `fechaInicio` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -191,31 +200,33 @@ CREATE TABLE IF NOT EXISTS `Comandas` (
   PRIMARY KEY (`idComanda`),
   CONSTRAINT `fk_Comandas_Clientes1`
     FOREIGN KEY (`idCliente`)
-    REFERENCES `Clientes` (`idUsuario`)
+    REFERENCES `Clientes` (`idCliente`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Comandas_Mozos1`
-    FOREIGN KEY (`idMozo`)
-    REFERENCES `Mozos` (`idUsuario`)
-    ON DELETE RESTRICT
-    ON UPDATE NO ACTION,
+    ON UPDATE RESTRICT,
   CONSTRAINT `fk_Comandas_Mesas1`
     FOREIGN KEY (`numeroMesa`)
-    REFERENCES `Mesas` (`numeroMesa`)
+    REFERENCES `Mesas` (`idMesa`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT,
+  CONSTRAINT `fk_Comandas_Usuarios1`
+    FOREIGN KEY (`idMozo`)
+    REFERENCES `Usuarios` (`idUsuario`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
 CREATE INDEX `fk_Comandas_Clientes1_idx` ON `Comandas` (`idCliente` ASC) VISIBLE;
 
-CREATE INDEX `fk_Comandas_Mozos1_idx` ON `Comandas` (`idMozo` ASC) VISIBLE;
-
 CREATE INDEX `fk_Comandas_Mesas1_idx` ON `Comandas` (`numeroMesa` ASC) VISIBLE;
+
+CREATE INDEX `fk_Comandas_Usuarios1_idx` ON `Comandas` (`idMozo` ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
 -- Table `LineasComandas`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `LineasComandas` ;
+
 CREATE TABLE IF NOT EXISTS `LineasComandas` (
   `idLineasComanda` INT NOT NULL AUTO_INCREMENT,
   `cantidad` SMALLINT NOT NULL,
@@ -229,12 +240,12 @@ CREATE TABLE IF NOT EXISTS `LineasComandas` (
     FOREIGN KEY (`idComanda`)
     REFERENCES `Comandas` (`idComanda`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION,
+    ON UPDATE RESTRICT,
   CONSTRAINT `fk_LineasComandas_Productos1`
     FOREIGN KEY (`idProducto`)
     REFERENCES `Productos` (`idProducto`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
 CREATE INDEX `fk_LineasComandas_Comandas1_idx` ON `LineasComandas` (`idComanda` ASC) VISIBLE;
@@ -250,35 +261,39 @@ CREATE INDEX `idx_LineasComandas_idComanda_estado` ON `LineasComandas` (`idComan
 -- -----------------------------------------------------
 -- Table `CuponesClientes`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `CuponesClientes` ;
+
 CREATE TABLE IF NOT EXISTS `CuponesClientes` (
-  `Cupones_idCupon` INT NOT NULL,
-  `Clientes_Usuarios_idUsuario` INT NOT NULL,
-  `codigo` BINARY(16) NOT NULL UNIQUE,
+  `idCupon` INT NOT NULL,
+  `idCliente` INT NOT NULL,
+  `codigo` BINARY(16) NOT NULL,
   `estado` ENUM('NO USADO', 'USADO', 'EXPIRADO') NOT NULL DEFAULT 'NO USADO',
   `idLineasComanda` INT NULL,
-  PRIMARY KEY (`Cupones_idCupon`, `Clientes_Usuarios_idUsuario`),
+  PRIMARY KEY (`idCupon`, `idCliente`),
   CONSTRAINT `fk_Cupones_has_Clientes_Cupones1`
-    FOREIGN KEY (`Cupones_idCupon`)
+    FOREIGN KEY (`idCupon`)
     REFERENCES `Cupones` (`idCupon`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION,
+    ON UPDATE RESTRICT,
   CONSTRAINT `fk_Cupones_has_Clientes_Clientes1`
-    FOREIGN KEY (`Clientes_Usuarios_idUsuario`)
-    REFERENCES `Clientes` (`idUsuario`)
+    FOREIGN KEY (`idCliente`)
+    REFERENCES `Clientes` (`idCliente`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION,
+    ON UPDATE RESTRICT,
   CONSTRAINT `fk_CuponesClientes_LineasComandas1`
     FOREIGN KEY (`idLineasComanda`)
     REFERENCES `LineasComandas` (`idLineasComanda`)
     ON DELETE RESTRICT
-    ON UPDATE NO ACTION)
+    ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
-CREATE INDEX `fk_Cupones_has_Clientes_Clientes1_idx` ON `CuponesClientes` (`Clientes_Usuarios_idUsuario` ASC) VISIBLE;
+CREATE INDEX `fk_Cupones_has_Clientes_Clientes1_idx` ON `CuponesClientes` (`idCliente` ASC) VISIBLE;
 
-CREATE INDEX `fk_Cupones_has_Clientes_Cupones1_idx` ON `CuponesClientes` (`Cupones_idCupon` ASC) VISIBLE;
+CREATE INDEX `fk_Cupones_has_Clientes_Cupones1_idx` ON `CuponesClientes` (`idCupon` ASC) VISIBLE;
 
 CREATE INDEX `fk_CuponesClientes_LineasComandas1_idx` ON `CuponesClientes` (`idLineasComanda` ASC) VISIBLE;
+
+CREATE UNIQUE INDEX `codigo_UNIQUE` ON `CuponesClientes` (`codigo` ASC) VISIBLE;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
