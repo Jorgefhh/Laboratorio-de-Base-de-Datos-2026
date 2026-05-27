@@ -1,17 +1,3 @@
--- =====================================================
--- TRABAJO PRÁCTICO N° 1 - 2026
--- LABORATORIO DE BASES DE DATOS
--- =====================================================
--- Año: 2026 
--- Grupo Nro: 08 
--- Integrantes: Russo Francisco, Huarachi Jorge
--- Tema: Sistema de gestión de pedidos y fidelización de clientes
--- Nombre del Esquema: LBD2026G8RomaLBD
--- Plataforma (SO + Versión): Linux mint
--- Motor y Versión: MySQL Server 8.0
--- GitHub Repositorio: https://github.com/matiasmendiondo/LBD2026G08
--- GitHub Usuario:  russoagustin - Jorgefhh
--- =====================================================
 
 USE `LBD2026G08`;
 
@@ -69,7 +55,7 @@ INSERT INTO `Subcategorias` (`idCategoria`, `subcategoria`) VALUES
 -- =====================================================
 -- 3. TABLA: Productos
 -- =====================================================
-INSERT INTO `Productos` (`idProducto`, `producto`, `precioLista`, `puntos`, `descripcion`, `disponible`, `idSubcategoria`, `dCategoria`) VALUES
+INSERT INTO `Productos` (`idProducto`, `producto`, `precioLista`, `puntos`, `descripcion`, `disponible`, `idSubcategoria`, `idCategoria`) VALUES
 (1, 'Hamburguesa Roma Completa', 6500.00, 50, 'Medallón 180g, queso, lechuga, tomate y aderezo', 1, 1, 1),
 (2, 'Doble Bacon Burger', 7800.00, 70, 'Doble carne, mucho bacon, cheddar y barbacoa', 1, 1, 1),
 (3, 'Medallón Extra', 1800.00, 10, 'Añade un medallón extra a tu hamburguesa', 1, 15, 1),
@@ -159,12 +145,16 @@ INSERT INTO `Cupones` (`idCupon`, `idProducto`, `descuento`, `precioPuntos`, `fe
 (22, 8, 0.20, 160, '2026-08-10'), (23, 10, 0.10, 200, '2026-09-25');
 
 -- =====================================================
--- 8. TABLA: Comandas (23 Comandas)
+-- 8. TABLA: Comandas (Ampliada con reglas NULL y fechas)
 -- =====================================================
+-- Regla 1: idCliente e idMozo no pueden ser ambos NULL a la vez.
+-- Regla 2: idMozo puede ser NULL (Ej. pedido autogestionado).
+-- Regla 3: idCliente puede ser NULL (Ej. cliente ocasional de paso sin registro).
 INSERT INTO `Comandas` (`idComanda`, `fechaInicio`, `fechaFin`, `cancelada`, `idCliente`, `idMozo`, `numeroMesa`) VALUES
+-- Originales
 (1, '2026-05-20 21:00:00', '2026-05-20 22:30:00', 0, 4, 2, 1), 
 (2, '2026-05-24 12:00:00', NULL, 0, 5, 3, 4), 
-(3, '2026-05-23 19:15:00', '2026-05-23 19:30:00', 1, NULL, 2, 2),
+(3, '2026-05-23 19:15:00', '2026-05-23 19:30:00', 1, NULL, 2, 2), -- Cliente NULL, válido
 (4, '2026-05-24 20:00:00', '2026-05-24 21:30:00', 0, 6, 2, 1),
 (5, '2026-05-24 20:15:00', '2026-05-24 21:45:00', 0, 7, 3, 2),
 (6, '2026-05-24 20:30:00', NULL, 0, 8, 2, 3),
@@ -184,12 +174,53 @@ INSERT INTO `Comandas` (`idComanda`, `fechaInicio`, `fechaFin`, `cancelada`, `id
 (20, '2026-05-21 19:45:00', '2026-05-21 21:15:00', 0, 22, 2, 2),
 (21, '2026-05-21 20:30:00', '2026-05-21 21:40:00', 0, 23, 3, 3),
 (22, '2026-05-21 21:15:00', '2026-05-21 22:50:00', 0, 24, 2, 4),
-(23, '2026-05-21 22:00:00', '2026-05-21 23:10:00', 0, 25, 3, 5);
+(23, '2026-05-21 22:00:00', '2026-05-21 23:10:00', 0, 25, 3, 5),
+-- HISTÓRICO 2025 (Enero - Diciembre)
+(24, '2025-01-15 20:00:00', '2025-01-15 21:45:00', 0, 4, NULL, 6), -- Autogestionado, Mozo NULL
+(25, '2025-01-20 21:15:00', '2025-01-20 23:00:00', 0, 5, 2, 1),
+(26, '2025-02-14 19:30:00', '2025-02-14 21:00:00', 0, NULL, 3, 2), -- Cliente ocasional (San Valentín)
+(27, '2025-02-14 21:30:00', '2025-02-14 23:50:00', 0, 6, 3, 3),
+(28, '2025-03-05 18:00:00', '2025-03-05 19:20:00', 0, 7, 2, 4),
+(29, '2025-03-18 20:45:00', '2025-03-18 22:15:00', 0, 8, NULL, 5),
+(30, '2025-04-10 13:00:00', '2025-04-10 14:15:00', 0, NULL, 2, 1),
+(31, '2025-05-25 12:30:00', '2025-05-25 14:00:00', 0, 9, 3, 2),
+(32, '2025-06-15 21:00:00', '2025-06-15 22:30:00', 0, 10, NULL, 3),
+(33, '2025-07-20 20:00:00', '2025-07-20 23:00:00', 0, NULL, 2, 4), -- Día del amigo
+(34, '2025-07-20 20:30:00', '2025-07-20 23:15:00', 0, 11, 3, 5),
+(35, '2025-08-12 19:15:00', '2025-08-12 20:45:00', 0, 12, 2, 6),
+(36, '2025-09-21 21:00:00', '2025-09-21 22:30:00', 0, 13, NULL, 7), -- Día de la primavera
+(37, '2025-10-31 22:00:00', '2025-10-31 23:45:00', 0, 14, 3, 8),
+(38, '2025-11-15 20:30:00', '2025-11-15 21:50:00', 0, NULL, 2, 9),
+(39, '2025-12-24 13:00:00', '2025-12-24 14:30:00', 0, 15, 3, 1),
+(40, '2025-12-31 21:30:00', '2025-12-31 23:55:00', 0, 16, 2, 2),
+-- HISTÓRICO 2026 (Enero - Mayo)
+(41, '2026-01-05 20:00:00', '2026-01-05 21:30:00', 0, NULL, 3, 3),
+(42, '2026-01-18 21:15:00', '2026-01-18 22:45:00', 0, 17, 2, 4),
+(43, '2026-02-14 20:30:00', '2026-02-14 22:30:00', 0, 18, NULL, 5),
+(44, '2026-02-28 19:00:00', '2026-02-28 20:15:00', 1, 19, 3, 6), -- Cancelada
+(45, '2026-03-10 21:00:00', '2026-03-10 22:15:00', 0, NULL, 2, 7),
+(46, '2026-03-25 13:30:00', '2026-03-25 14:45:00', 0, 20, 3, 8),
+(47, '2026-04-02 20:45:00', '2026-04-02 22:00:00', 0, 21, NULL, 9),
+(48, '2026-04-15 21:30:00', '2026-04-15 23:00:00', 0, 22, 2, 1),
+(49, '2026-05-01 12:30:00', '2026-05-01 14:30:00', 0, 23, 3, 2), -- Día del trabajador
+(50, '2026-05-10 20:00:00', '2026-05-10 21:15:00', 0, NULL, 2, 3),
+(51, '2026-05-12 19:30:00', '2026-05-12 21:00:00', 0, 24, 3, 4),
+(52, '2026-05-15 21:45:00', '2026-05-15 23:15:00', 0, 25, NULL, 5),
+(53, '2026-05-18 20:15:00', '2026-05-18 21:30:00', 0, 4, 2, 6),
+(54, '2026-05-19 21:00:00', '2026-05-19 22:45:00', 0, NULL, 3, 7),
+-- COMANDAS ACTIVAS (Sin fechaFin - Noche actual o al mediodía)
+(55, '2026-05-25 12:00:00', NULL, 0, 5, 2, 8),
+(56, '2026-05-25 12:15:00', NULL, 0, 6, NULL, 9),
+(57, '2026-05-25 12:30:00', NULL, 0, NULL, 3, 1),
+(58, '2026-05-25 13:00:00', NULL, 0, 7, 2, 2),
+(59, '2026-05-25 13:10:00', NULL, 0, 8, NULL, 3),
+(60, '2026-05-25 13:20:00', NULL, 0, 9, 3, 4);
 
 -- =====================================================
--- 9. TABLA: LineasComandas (11 Líneas)
+-- 9. TABLA: LineasComandas (Ampliada)
 -- =====================================================
 INSERT INTO `LineasComandas` (`idLineasComanda`, `cantidad`, `precio`, `estado`, `observaciones`, `idComanda`, `idProducto`) VALUES
+-- Originales
 (1, 1, 6500.00, 'COMPLETADO', 'Sin cebolla por favor', 1, 1),
 (2, 1, 1300.00, 'COMPLETADO', NULL, 1, 4),
 (3, 2, 4000.00, 'COMPLETADO', 'Bien fríos', 1, 14),
@@ -200,10 +231,73 @@ INSERT INTO `LineasComandas` (`idLineasComanda`, `cantidad`, `precio`, `estado`,
 (8, 2, 3200.00, 'COMPLETADO', NULL, 5, 5),
 (9, 1, 5800.00, 'PREPARACION', NULL, 6, 9),
 (10, 1, 4500.00, 'COMPLETADO', NULL, 7, 7),
-(11, 3, 1500.00, 'COMPLETADO', NULL, 8, 12);
+(11, 3, 1500.00, 'COMPLETADO', NULL, 8, 12),
+-- Nuevas Líneas (Histórico 2025)
+(12, 2, 6500.00, 'COMPLETADO', 'Sin aderezo', 24, 1),
+(13, 1, 3200.00, 'COMPLETADO', NULL, 24, 5),
+(14, 2, 3100.00, 'COMPLETADO', NULL, 25, 16),
+(15, 1, 4500.00, 'COMPLETADO', NULL, 25, 7),
+(16, 2, 4200.00, 'COMPLETADO', 'Para el brindis de San Valentín', 26, 15),
+(17, 1, 19500.00, 'COMPLETADO', 'Descorche', 27, 20),
+(18, 2, 7200.00, 'COMPLETADO', 'Para compartir', 27, 10),
+(19, 1, 5800.00, 'COMPLETADO', 'En pan francés', 28, 9),
+(20, 1, 1500.00, 'COMPLETADO', NULL, 28, 12),
+(21, 3, 3100.00, 'COMPLETADO', 'Variadas', 29, 17),
+(22, 1, 4900.00, 'COMPLETADO', NULL, 30, 8),
+(23, 2, 3900.00, 'COMPLETADO', 'Sin crutones', 31, 11),
+(24, 1, 1200.00, 'COMPLETADO', 'Sin gas', 31, 13),
+(25, 1, 6500.00, 'COMPLETADO', NULL, 32, 1),
+(26, 4, 4500.00, 'COMPLETADO', 'Promo día del amigo', 33, 18),
+(27, 2, 4800.00, 'COMPLETADO', 'Doble panceta', 33, 6),
+(28, 2, 7800.00, 'COMPLETADO', NULL, 34, 2),
+(29, 1, 12500.00, 'COMPLETADO', 'Bien frío', 35, 23),
+(30, 2, 4000.00, 'COMPLETADO', NULL, 36, 14),
+(31, 1, 4500.00, 'COMPLETADO', NULL, 36, 7),
+(32, 1, 5800.00, 'COMPLETADO', NULL, 37, 22),
+(33, 2, 2800.00, 'COMPLETADO', 'Postre para dos', 37, 25),
+(34, 1, 7200.00, 'COMPLETADO', NULL, 38, 10),
+(35, 1, 4000.00, 'COMPLETADO', 'Promo Happy Hour', 38, 26),
+(36, 3, 1000.00, 'COMPLETADO', 'Fichas de pool', 39, 27),
+(37, 1, 12500.00, 'COMPLETADO', 'Brindis Fin de Año', 40, 23),
+(38, 2, 7800.00, 'COMPLETADO', NULL, 40, 2),
+-- Nuevas Líneas (Histórico 2026)
+(39, 2, 3100.00, 'COMPLETADO', 'IPAs', 41, 16),
+(40, 1, 4800.00, 'COMPLETADO', 'Con extra crema', 41, 6),
+(41, 1, 6500.00, 'COMPLETADO', NULL, 42, 1),
+(42, 1, 1800.00, 'COMPLETADO', 'Medallón extra', 42, 3),
+(43, 2, 3800.00, 'COMPLETADO', 'Copas tiradas', 43, 24),
+(44, 1, 4500.00, 'CANCELADA', 'Se demoró mucho', 44, 7),
+(45, 1, 7200.00, 'COMPLETADO', NULL, 45, 10),
+(46, 1, 3200.00, 'COMPLETADO', NULL, 46, 5),
+(47, 1, 1500.00, 'COMPLETADO', NULL, 46, 12),
+(48, 2, 3900.00, 'COMPLETADO', NULL, 47, 11),
+(49, 1, 7500.00, 'COMPLETADO', NULL, 47, 21),
+(50, 2, 4000.00, 'COMPLETADO', NULL, 48, 14),
+(51, 1, 5800.00, 'COMPLETADO', NULL, 49, 9),
+(52, 2, 4500.00, 'COMPLETADO', 'Stella 1L', 49, 18),
+(53, 1, 6500.00, 'COMPLETADO', NULL, 50, 1),
+(54, 1, 3100.00, 'COMPLETADO', NULL, 50, 17),
+(55, 1, 4900.00, 'COMPLETADO', NULL, 51, 8),
+(56, 1, 1200.00, 'COMPLETADO', 'Con gas', 51, 13),
+(57, 1, 7800.00, 'COMPLETADO', NULL, 52, 2),
+(58, 1, 1300.00, 'COMPLETADO', 'Extra Cheddar', 52, 4),
+(59, 2, 4200.00, 'COMPLETADO', 'Negronis', 53, 15),
+(60, 1, 7200.00, 'COMPLETADO', NULL, 54, 10),
+-- Nuevas Líneas (Día actual - En preparación)
+(61, 2, 6500.00, 'PREPARACION', 'Sin tomate', 55, 1),
+(62, 1, 3200.00, 'PREPARACION', NULL, 55, 5),
+(63, 1, 4500.00, 'PREPARACION', NULL, 56, 7),
+(64, 1, 1500.00, 'COMPLETADO', 'Coca entregada', 56, 12),
+(65, 1, 5800.00, 'PREPARACION', NULL, 57, 9),
+(66, 1, 7800.00, 'PREPARACION', 'Sale con barbacoa', 58, 2),
+(67, 1, 3100.00, 'PREPARACION', 'Pinta IPA', 58, 16),
+(68, 2, 3900.00, 'PREPARACION', NULL, 59, 11),
+(69, 1, 1200.00, 'COMPLETADO', 'Agua entregada', 59, 13),
+(70, 1, 19500.00, 'PREPARACION', 'Llevar hielera', 60, 20),
+(71, 1, 4800.00, 'PREPARACION', 'Papas con verdeo', 60, 6);
 
 -- =====================================================
--- 10. TABLA: CuponesClientes (22 Relaciones)
+-- 10. TABLA: CuponesClientes (22 Relaciones originales)
 -- =====================================================
 INSERT INTO `CuponesClientes` (`idCupon`, `idCliente`, `codigo`, `estado`, `idLineasComanda`) VALUES
 (1, 4, UNHEX(REPLACE(UUID(), '-', '')), 'USADO', 1),
