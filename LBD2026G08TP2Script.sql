@@ -1,22 +1,5 @@
 -- MySQL Workbench Forward Engineering
 
--- =====================================================
--- TRABAJO PRÁCTICO N° 1 - 2026
--- LABORATORIO DE BASES DE DATOS
--- =====================================================
--- Año: 2026 
--- Grupo Nro: 08 
--- Integrantes: Russo Francisco, Huarachi Jorge
--- Tema: Sistema de gestión de pedidos y fidelización de clientes
--- Nombre del Esquema: LBD2026G8RomaLBD
--- Plataforma (SO + Versión): Linux mint
--- Motor y Versión: MySQL Server 8.0
--- GitHub Repositorio: https://github.com/matiasmendiondo/LBD2026G08
--- GitHub Usuario:  russoagustin - Jorgefhh
--- =====================================================
-
--- MySQL Workbench Forward Engineering
-
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
@@ -85,16 +68,18 @@ CREATE TABLE IF NOT EXISTS `Productos` (
   `descripcion` VARCHAR(255) NULL,
   `disponible` TINYINT(1) NOT NULL DEFAULT TRUE,
   `idSubcategoria` INT NOT NULL,
-  `dCategoria` INT NOT NULL,
+  `idCategoria` INT NOT NULL,
   PRIMARY KEY (`idProducto`),
   CONSTRAINT `fk_Productos_Subcategorias1`
-    FOREIGN KEY (`idSubcategoria` , `dCategoria`)
+    FOREIGN KEY (`idSubcategoria` , `idCategoria`)
     REFERENCES `Subcategorias` (`idSubcategoria` , `idCategoria`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
 ENGINE = InnoDB;
 
-CREATE INDEX `fk_Productos_Subcategorias1_idx` ON `Productos` (`idSubcategoria` ASC, `dCategoria` ASC) VISIBLE;
+CREATE INDEX `fk_Productos_Subcategorias1_idx` ON `Productos` (`idSubcategoria` ASC, `idCategoria` ASC) VISIBLE;
+CREATE INDEX `fk_Productos_idSubcategoria_idx` ON `Productos` (`idSubcategoria`) VISIBLE;
+CREATE INDEX `fk_Productos_idCategoria_idx` ON `Productos` (`idCategoria`) VISIBLE;
 
 
 -- -----------------------------------------------------
@@ -196,7 +181,7 @@ CREATE TABLE IF NOT EXISTS `Comandas` (
   `cancelada` BOOLEAN NOT NULL DEFAULT FALSE,
   `idCliente` INT NULL,
   `idMozo` INT NULL,
-  `numeroMesa` INT NULL,
+  `idMesa` INT NULL,
   PRIMARY KEY (`idComanda`),
   CONSTRAINT `fk_Comandas_Clientes1`
     FOREIGN KEY (`idCliente`)
@@ -204,7 +189,7 @@ CREATE TABLE IF NOT EXISTS `Comandas` (
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
   CONSTRAINT `fk_Comandas_Mesas1`
-    FOREIGN KEY (`numeroMesa`)
+    FOREIGN KEY (`idMesa`)
     REFERENCES `Mesas` (`idMesa`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
@@ -217,7 +202,7 @@ ENGINE = InnoDB;
 
 CREATE INDEX `fk_Comandas_Clientes1_idx` ON `Comandas` (`idCliente` ASC) VISIBLE;
 
-CREATE INDEX `fk_Comandas_Mesas1_idx` ON `Comandas` (`numeroMesa` ASC) VISIBLE;
+CREATE INDEX `fk_Comandas_Mesas1_idx` ON `Comandas` (`idMesa` ASC) VISIBLE;
 
 CREATE INDEX `fk_Comandas_Usuarios1_idx` ON `Comandas` (`idMozo` ASC) VISIBLE;
 

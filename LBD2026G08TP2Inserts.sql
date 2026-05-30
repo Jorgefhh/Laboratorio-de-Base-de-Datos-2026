@@ -150,7 +150,7 @@ INSERT INTO `Cupones` (`idCupon`, `idProducto`, `descuento`, `precioPuntos`, `fe
 -- Regla 1: idCliente e idMozo no pueden ser ambos NULL a la vez.
 -- Regla 2: idMozo puede ser NULL (Ej. pedido autogestionado).
 -- Regla 3: idCliente puede ser NULL (Ej. cliente ocasional de paso sin registro).
-INSERT INTO `Comandas` (`idComanda`, `fechaInicio`, `fechaFin`, `cancelada`, `idCliente`, `idMozo`, `numeroMesa`) VALUES
+INSERT INTO `Comandas` (`idComanda`, `fechaInicio`, `fechaFin`, `cancelada`, `idCliente`, `idMozo`, `idMesa`) VALUES
 -- Originales
 (1, '2026-05-20 21:00:00', '2026-05-20 22:30:00', 0, 4, 2, 1), 
 (2, '2026-05-24 12:00:00', NULL, 0, 5, 3, 4), 
