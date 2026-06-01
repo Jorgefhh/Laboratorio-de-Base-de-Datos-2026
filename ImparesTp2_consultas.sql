@@ -2,9 +2,19 @@ USE LBD2026G08;
 
 
 -- Consulta 1
-SELECT subcategoria, Productos.producto FROM Productos INNER JOIN Subcategorias
-ON Subcategorias.idSubcategoria = Productos.dCategoria 
-WHERE Subcategorias.idCategoria = 1;
+
+/*
+1. Dada una Categoría, mostrar todas sus subcategorías y sus productos ordenados.
+*/
+SET @idCategoriaBuscada = 3;
+
+SELECT c.categoria,s.subcategoria,p.producto FROM Categorias c
+LEFT JOIN Subcategorias s
+ON c.idCategoria = s.idCategoria
+LEFT JOIN Productos p
+ON s.idSubcategoria = p.idSubcategoria
+WHERE c.idCategoria = @idCategoriaBuscada
+ORDER BY s.subcategoria,p.producto;
 
 
 
@@ -15,11 +25,26 @@ ese rango de fechas.
 
 */
 
-SELECT Comandas.idComanda, Comandas.fechaFin, Comandas.cancelada, Comandas.idCliente, CuponesClientes.idCupon, CuponesClientes.codigo
-FROM Comandas INNER JOIN Clientes ON Comandas.idCliente = Clientes.idCliente
-INNER JOIN CuponesClientes ON CuponesClientes.idCliente = Clientes.idCliente
-WHERE Clientes.idCliente = 4 AND Comandas.fechaFin BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59' 
-AND CuponesClientes.estado = 'USADO';
+SET @idCliente = 4;
+SET @fechaDesde = '2026-01-01 00:00:00';
+SET @fechaHasta = '2026-12-31 23:59:5';
+
+SELECT c.idComanda,c.fechaInicio,c.idCliente,c.idMozo,c.numeroMesa,p.producto,lc.cantidad,cp.idCupon,cp.descuento
+FROM Clientes cl
+LEFT JOIN Comandas c
+ON cl.idCliente = c.idCliente
+LEFT JOIN LineasComandas lc
+ON c.idComanda = lc.idComanda
+LEFT JOIN Productos p
+ON lc.idProducto = p.idProducto
+LEFT JOIN CuponesClientes cc
+ON cl.idCliente = cc.idCliente
+LEFT JOIN Cupones cp
+ON cc.idCupon = cp.idCupon
+WHERE cl.idCliente = @idCliente
+AND c.fechaInicio BETWEEN @fechaDesde AND @fechaHasta
+AND cc.estado = 'USADO'
+ORDER BY c.fechaInicio;
 
 
 -- 
@@ -30,22 +55,33 @@ AND CuponesClientes.estado = 'USADO';
 
 */
 
-	SELECT COUNT(*) AS CantidadComandas, Usuarios.nombres FROM Usuarios
-    INNER JOIN Comandas ON Comandas.idMozo = Usuarios.idUsuario
-    WHERE Comandas.fechaFin BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59'
-    GROUP BY Usuarios.nombres ORDER BY CantidadComandas ASC;
+SET @fechaDesde = '2026-01-01 00:00:00';
+SET @fechaHasta = '2026-12-31 23:59:59';
+
+SELECT u.idUsuario,u.nombres,u.apellidos,COUNT(c.idComanda) AS CantidadComandas
+FROM Usuarios u
+INNER JOIN Comandas c
+ON c.idMozo = u.idUsuario
+WHERE  u.esMozo = TRUE AND c.fechaFin BETWEEN @fechaDesde AND @fechaHasta
+GROUP BY u.idUsuario,u.nombres,u.apellidos
+ORDER BY CantidadComandas DESC;
     
     
 /*
 7. Hacer un ranking con los clientes con más cupones usados .
 
 */
-
-	SELECT COUNT(*) AS CantidadCupones, Usuarios.nombres FROM Usuarios
-    INNER JOIN Clientes ON Clientes.idCliente = Usuarios.idUsuario
-    INNER JOIN CuponesClientes ON Clientes.idCliente = CuponesClientes.idCliente
-    WHERE CuponesClientes.estado = 'USADO'
-    GROUP BY Usuarios.nombres ORDER BY CantidadCupones ASC;
+    
+-- Solo se incluyen en el ranking los clientes que alguna vez usaron un cupón    
+SELECT u.idUsuario,u.nombres,u.apellidos,COUNT(cc.idCupon) AS CantidadCupones
+FROM Usuarios u
+INNER JOIN Clientes c
+ON c.idCliente = u.idUsuario
+INNER JOIN CuponesClientes cc
+ON cc.idCliente = c.idCliente
+WHERE cc.estado = 'USADO'
+GROUP BY u.idUsuario,u.nombres,u.apellidos
+ORDER BY CantidadCupones DESC;
     
 /*
 9. Crear una copia de la tabla productos, que además tenga una columna del tipo JSON
@@ -54,9 +90,54 @@ datos del TP1 y resolver la consulta: Dado un producto, mostrar las comandas com
 donde participa.
 
 */
+CREATE TEMPORARY TABLE ProductosJSON AS
+SELECT Productos.*, NULL  AS detalleComandas
+FROM Productos;
+ALTER TABLE ProductosJSON
+MODIFY detalleComandas JSON;
+
+UPDATE ProductosJSON pj
+SET detalleComandas = (
+    SELECT JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'idComanda',    lc.idComanda,
+            'fechaInicio',  c.fechaInicio,
+            'fechaFin',     c.fechaFin,
+            'cancelada',    c.cancelada,
+            'idMesa',       c.numeroMesa,
+            'cantidad',     lc.cantidad,
+            'precio',       lc.precio,
+            'estado',       lc.estado
+        )
+    )
+    FROM LineasComandas lc
+    JOIN Comandas c ON lc.idComanda = c.idComanda
+    WHERE lc.idProducto = pj.idProducto
+);
 
 
--- coming soon...
+-- Luego: Dado un producto, mostrar las comandas completas donde participa
+SET @idProducto = 1;
+
+SELECT pj.idProducto,pj.producto,jt.*
+FROM ProductosJSON pj
+LEFT JOIN JSON_TABLE(
+    pj.detalleComandas,
+    '$[*]' COLUMNS (
+        idComanda   INT         PATH '$.idComanda',
+        fechaInicio DATETIME    PATH '$.fechaInicio',
+        fechaFin    DATETIME    PATH '$.fechaFin',
+        cancelada   TINYINT     PATH '$.cancelada',
+        idMesa      INT         PATH '$.idMesa',
+        cantidad    SMALLINT    PATH '$.cantidad',
+        precio      DECIMAL(9,2) PATH '$.precio',
+        estado      VARCHAR(20) PATH '$.estado'
+    )
+) AS jt ON TRUE
+WHERE @idProducto = 1;
+
+
+-- Para ver tablas pobladas:
 
 Select * from Usuarios;
 
