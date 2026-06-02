@@ -18,7 +18,11 @@ USE LBD2026G08Roma;
 /*
     1. Dada una Categoría, mostrar todas sus subcategorías y sus productos ordenados.
 */
-SET @idCategoriaBuscada = 3;
+-- Primero realizo la busqueda de la categoria dada:
+SELECT idCategoria INTO @idCategoriaBuscada 
+FROM Categorias 
+WHERE categoria = 'HAMBURGUESAS';
+
 
 SELECT c.categoria,s.subcategoria,p.producto FROM Categorias c
 LEFT JOIN Subcategorias s
@@ -49,9 +53,15 @@ ORDER BY c.fechaFin DESC;
     3. Dado un cliente, y un rango de fechas, listar todas sus comandas y cupones aplicados en
     ese rango de fechas.
 */
-SET @idCliente = 4;
+-- Primero realizo la búsqueda del cliente dado:
+SELECT idUsuario INTO @idCliente 
+FROM Usuarios 
+WHERE nombres = 'Diego Nicolas' AND apellidos = 'Maradona';
+
+-- Asigno los valores de fecha:
 SET @fechaDesde = '2026-01-01 00:00:00';
 SET @fechaHasta = '2026-12-31 23:59:5';
+
 
 SELECT c.idComanda,c.fechaInicio,c.idCliente,c.idMozo,c.idMesa,p.producto,lc.cantidad,cp.idCupon,cp.descuento
 FROM Clientes cl
@@ -84,8 +94,10 @@ GROUP BY date_format(fechaInicio, '%y-%m') WITH ROLLUP;
     5. Hacer un ranking con los mozos con más comandas en un rango de fechas.
 */
 
+-- Defino un rango de fechas:
 SET @fechaDesde = '2026-01-01 00:00:00';
 SET @fechaHasta = '2026-12-31 23:59:59';
+
 
 SELECT u.idUsuario,u.nombres,u.apellidos,COUNT(c.idComanda) AS CantidadComandas
 FROM Usuarios u
@@ -206,7 +218,11 @@ SELECT * FROM ProductosJSON;
 
 
 -- Luego: Dado un producto, mostrar las comandas completas donde participa
-SET @idProducto = 1;
+-- Entonces hago la búsquedad para encontrar el producto dado:
+SELECT idProducto INTO @idProductoBuscado 
+FROM Productos 
+WHERE producto = 'Hamburguesa Roma Completa';
+
 
 SELECT det.idComanda, det.idMesa, det.fechaInicio, det.fechaFin, det.cancelada, det.precio, det.cantidad, det.estado, det.cliente, det.mozo
 FROM ProductosJSON p,
