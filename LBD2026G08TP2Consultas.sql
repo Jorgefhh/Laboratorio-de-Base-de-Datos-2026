@@ -1,5 +1,5 @@
 -- =====================================================
--- TRABAJO PRÁCTICO N° 1 - 2026
+-- TRABAJO PRÁCTICO N° 2 - 2026
 -- LABORATORIO DE BASES DE DATOS
 -- =====================================================
 -- Año: 2026 
@@ -53,7 +53,7 @@ SET @idCliente = 4;
 SET @fechaDesde = '2026-01-01 00:00:00';
 SET @fechaHasta = '2026-12-31 23:59:5';
 
-SELECT c.idComanda,c.fechaInicio,c.idCliente,c.idMozo,c.numeroMesa,p.producto,lc.cantidad,cp.idCupon,cp.descuento
+SELECT c.idComanda,c.fechaInicio,c.idCliente,c.idMozo,c.idMesa,p.producto,lc.cantidad,cp.idCupon,cp.descuento
 FROM Clientes cl
 LEFT JOIN Comandas c
 ON cl.idCliente = c.idCliente
@@ -144,52 +144,93 @@ SELECT * FROM v_reporte_mes_a_mes WHERE mes BETWEEN '25-03' and '26-05' OR mes I
     datos del TP1 y resolver la consulta: Dado un producto, mostrar las comandas completas
     donde participa.
 */
-CREATE TEMPORARY TABLE ProductosJSON AS
-SELECT Productos.*, NULL  AS detalleComandas
+
+-- Creo tabla productos JSON
+DROP TABLE IF EXISTS ProductosJSON;
+
+CREATE TABLE ProductosJSON AS
+SELECT Productos.*, NULL AS detalleComandas
 FROM Productos;
+
+-- 2. Modifico la columna a tipo JSON
 ALTER TABLE ProductosJSON
 MODIFY detalleComandas JSON;
 
+-- Creo tabla temporal con los datos de las lineas comandas en formato JSON para poder anidar los JSON.
+
+DROP TABLE IF EXISTS datosJson;
+
+CREATE TEMPORARY TABLE datosJson AS
+SELECT cmd.idComanda, cmd.fechaInicio, cmd.fechaFin, cmd.cancelada,
+	cmd.idMesa,
+	lc.idProducto,
+	mozo.nombres as mozo,
+	cliente.nombres as cliente,
+	JSON_ARRAYAGG(
+		JSON_OBJECT(
+			'idLinea',       lc.idLineasComanda,
+			'precio',        lc.precio, 
+			'cantidad',      lc.cantidad, 
+			'estado',        lc.estado,
+            'observaciones', lc.observaciones
+		)
+	) AS lineas_json
+FROM LineasComandas lc
+JOIN Comandas cmd ON lc.idComanda = cmd.idComanda
+LEFT JOIN Usuarios cliente ON cliente.idUsuario = cmd.idCliente
+LEFT JOIN Usuarios mozo ON mozo.idUsuario = cmd.idMozo
+WHERE cmd.fechaFin IS NOT NULL
+GROUP BY cmd.idComanda, lc.idProducto;
+
+
+-- 3. Actualizo la tabla usando tabla temporal para anidar los JSON correctamente
 UPDATE ProductosJSON pj
 SET detalleComandas = (
     SELECT JSON_ARRAYAGG(
         JSON_OBJECT(
-            'idComanda',    lc.idComanda,
-            'fechaInicio',  c.fechaInicio,
-            'fechaFin',     c.fechaFin,
-            'cancelada',    c.cancelada,
-            'idMesa',       c.idMesa,
-            'cantidad',     lc.cantidad,
-            'precio',       lc.precio,
-            'estado',       lc.estado
+            'idComanda',   idComanda,
+            'fechaInicio', fechaInicio,
+            'fechaFin',    fechaFin,
+            'cancelada',   cancelada,
+            'idMesa',      idMesa,
+            'mozo',		   mozo,
+            'cliente',	   cliente,
+            'lineas',      lineas_json -- Aquí insertamos el JSON ya agrupado
         )
     )
-    FROM LineasComandas lc
-    JOIN Comandas c ON lc.idComanda = c.idComanda
-    WHERE lc.idProducto = pj.idProducto
+    FROM datosJson
+    WHERE idProducto = idProducto
 );
+
+SELECT * FROM ProductosJSON;
 
 
 -- Luego: Dado un producto, mostrar las comandas completas donde participa
 SET @idProducto = 1;
 
-SELECT pj.idProducto,pj.producto,jt.*
-FROM ProductosJSON pj
-LEFT JOIN JSON_TABLE(
-    pj.detalleComandas,
-    '$[*]' COLUMNS (
-        idComanda   INT         PATH '$.idComanda',
-        fechaInicio DATETIME    PATH '$.fechaInicio',
-        fechaFin    DATETIME    PATH '$.fechaFin',
-        cancelada   TINYINT     PATH '$.cancelada',
-        idMesa      INT         PATH '$.idMesa',
-        cantidad    SMALLINT    PATH '$.cantidad',
-        precio      DECIMAL(9,2) PATH '$.precio',
-        estado      VARCHAR(20) PATH '$.estado'
+SELECT det.idComanda, det.idMesa, det.fechaInicio, det.fechaFin, det.cancelada, det.precio, det.cantidad, det.estado, det.cliente, det.mozo
+FROM ProductosJSON p,
+JSON_TABLE(
+    p.detalleComandas,
+    '$[*]' COLUMNS(
+        idComanda INT PATH '$.idComanda',
+        idMesa    INT PATH '$.idMesa',
+        cancelada BOOLEAN PATH '$.cancelada',
+        mozo      VARCHAR(45) PATH '$.mozo',
+        cliente   VARCHAR(45) PATH '$.cliente',
+        fechaInicio DATETIME  PATH '$.fechaInicio',
+        fechaFin    DATETIME  PATH '$.fechaFin',
+        -- Entramos al arreglo interno de líneas por comanda
+        NESTED PATH '$.lineas[*]' COLUMNS(
+			idLinea        INT 			 PATH '$.idLinea',
+            precio   DECIMAL(10,2) PATH '$.precio',
+            cantidad INT           PATH '$.cantidad',
+            estado   VARCHAR(50)   PATH '$.estado',
+            observaciones   VARCHAR(255)   PATH '$.observaciones'
+        )
     )
-) AS jt ON TRUE
-WHERE @idProducto = 1;
-
+) AS det
+WHERE p.idProducto = @idProducto;
 
 /*
 	10. Realizar una vista que considere importante para su modelo. También dejar escrito el
@@ -200,13 +241,13 @@ WHERE @idProducto = 1;
     Vista de comandas activas para mozos y caja
 	muestra que mesas están ocupadas, las lineas de comanda y quién las atiende
 */
-DROP VIEW IF EXISTS v_comandas_activas;
 
-CREATE VIEW v_comandas_activas AS 
-SELECT m.numeroMesa, u.nombres as 'mozo' ,co.idComanda, co.fechaInicio, p.producto, lc.cantidad, lc.precio, lc.estado FROM Mesas m LEFT JOIN Comandas co ON m.idMesa = co.idMesa
+CREATE OR REPLACE VIEW v_comandas_activas AS 
+SELECT m.numeroMesa, mozo.nombres as 'mozo' ,co.idComanda, co.fechaInicio, p.producto, lc.cantidad, lc.precio, lc.estado FROM Mesas m 
+LEFT JOIN Comandas co ON m.idMesa = co.idMesa
 INNER JOIN LineasComandas lc ON co.idComanda = lc.idComanda
 INNER JOIN Productos p ON lc.idProducto = p.idProducto
-INNER JOIN Usuarios u ON co.idMozo = u.idUsuario
+INNER JOIN Usuarios mozo ON co.idMozo = mozo.idUsuario
 WHERE co.fechaFin IS NULL and co.cancelada = FALSE;
 
 SELECT * FROM v_comandas_activas;
