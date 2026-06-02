@@ -219,7 +219,7 @@ SELECT * FROM ProductosJSON;
 
 -- Luego: Dado un producto, mostrar las comandas completas donde participa
 -- Entonces hago la búsquedad para encontrar el producto dado:
-SELECT idProducto INTO @idProductoBuscado 
+SELECT idProducto INTO @idProducto 
 FROM Productos 
 WHERE producto = 'Hamburguesa Roma Completa';
 
