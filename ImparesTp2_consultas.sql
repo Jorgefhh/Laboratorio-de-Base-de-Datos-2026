@@ -6,7 +6,11 @@ USE LBD2026G08;
 /*
 1. Dada una Categoría, mostrar todas sus subcategorías y sus productos ordenados.
 */
-SET @idCategoriaBuscada = 3;
+-- Primero realizo la busqueda de la categoria dada:
+SELECT idCategoria INTO @idCategoriaBuscada 
+FROM Categorias 
+WHERE categoria = 'HAMBURGUESAS';
+
 
 SELECT c.categoria,s.subcategoria,p.producto FROM Categorias c
 LEFT JOIN Subcategorias s
@@ -25,9 +29,15 @@ ese rango de fechas.
 
 */
 
-SET @idCliente = 4;
+-- Primero realizo la búsqueda del cliente dado:
+SELECT idUsuario INTO @idCliente 
+FROM Usuarios 
+WHERE nombres = 'Diego Nicolas' AND apellidos = 'Maradona';
+
+-- Asigno los valores de fecha:
 SET @fechaDesde = '2026-01-01 00:00:00';
 SET @fechaHasta = '2026-12-31 23:59:5';
+
 
 SELECT c.idComanda,c.fechaInicio,c.idCliente,c.idMozo,c.numeroMesa,p.producto,lc.cantidad,cp.idCupon,cp.descuento
 FROM Clientes cl
@@ -55,8 +65,10 @@ ORDER BY c.fechaInicio;
 
 */
 
+-- Defino un rango de fechas:
 SET @fechaDesde = '2026-01-01 00:00:00';
 SET @fechaHasta = '2026-12-31 23:59:59';
+
 
 SELECT u.idUsuario,u.nombres,u.apellidos,COUNT(c.idComanda) AS CantidadComandas
 FROM Usuarios u
@@ -117,7 +129,11 @@ SET detalleComandas = (
 
 
 -- Luego: Dado un producto, mostrar las comandas completas donde participa
-SET @idProducto = 1;
+-- Primero hago la búsquedad para encontrar el producto dado:
+SELECT idProducto INTO @idProductoBuscado 
+FROM Productos 
+WHERE producto = 'Hamburguesa Roma Completa';
+
 
 SELECT pj.idProducto,pj.producto,jt.*
 FROM ProductosJSON pj
