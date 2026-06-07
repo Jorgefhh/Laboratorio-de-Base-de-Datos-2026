@@ -27,7 +27,7 @@ DROP SCHEMA IF EXISTS `LBD2026G08Roma` ;
 -- -----------------------------------------------------
 -- Schema RomaLBD
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `LBD2026G08Roma` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin ;
+CREATE SCHEMA IF NOT EXISTS `LBD2026G08Roma` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin ;
 USE `LBD2026G08Roma` ;
 
 -- -----------------------------------------------------
