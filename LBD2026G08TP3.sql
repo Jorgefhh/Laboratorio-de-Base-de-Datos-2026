@@ -82,7 +82,7 @@ BEGIN
 	DECLARE v_dni CHAR(8);
     DECLARE v_username VARCHAR(45);
     
-    SELECT dni into v_dni FROM Usuarios WHERE dni = v_dni;
+    SELECT dni into v_dni FROM Usuarios WHERE idUsuario = p_idUsuario;
     SELECT username INTO v_username FROM Usuarios WHERE idUsuario = p_idUsuario;
     
 
